@@ -2,9 +2,9 @@ name: Auto Generate XHS
 
 on:
   schedule:
-    - cron: "0 2 * * *"
-    - cron: "0 8 * * *"
-    - cron: "0 12 * * *"
+    - cron: "0 2 * * *"   # 北京时间 10:00
+    - cron: "0 8 * * *"   # 北京时间 16:00
+    - cron: "0 12 * * *"  # 北京时间 20:00
   workflow_dispatch:
 
 jobs:
@@ -23,11 +23,24 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install requests beautifulsoup4
 
-      - name: Run Agent
+      - name: Decide topic by current schedule
+        id: pick
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "$HOUR" = "02" ]; then
+            echo "topic=八字" >> $GITHUB_OUTPUT
+          elif [ "$HOUR" = "08" ]; then
+            echo "topic=MBTI" >> $GITHUB_OUTPUT
+          else
+            echo "topic=恋爱测试" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run batch agent
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python -m app.main
+          python -m app.batch_main --topic "${{ steps.pick.outputs.topic }}"
