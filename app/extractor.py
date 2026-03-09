@@ -1,7 +1,18 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+import requests
 
+
+def resolve_xhs_link(url: str) -> str:
+    """
+    解析 xhslink 短链接跳转
+    """
+    try:
+        r = requests.get(url, allow_redirects=True, timeout=15)
+        return r.url
+    except Exception:
+        return url
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -127,6 +138,7 @@ def normalize_body_lines(body: str) -> str:
 
 
 def extract_article(url: str):
+    url = resolve_xhs_link(url)
     r = requests.get(url, headers=HEADERS, timeout=20, allow_redirects=True)
     r.raise_for_status()
 
