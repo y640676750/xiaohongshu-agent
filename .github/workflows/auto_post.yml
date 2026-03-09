@@ -2,9 +2,9 @@ name: Auto Generate XHS
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # 北京时间 10:00
-    - cron: "0 8 * * *"   # 北京时间 16:00
-    - cron: "0 12 * * *"  # 北京时间 20:00
+    - cron: "0 0 * * *"   # 北京时间 10:00
+    - cron: "0 6 * * *"   # 北京时间 16:00
+    - cron: "0 10 * * *"  # 北京时间 20:00
   workflow_dispatch:
 
 jobs:

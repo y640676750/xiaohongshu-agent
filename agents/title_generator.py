@@ -3,7 +3,8 @@ from pathlib import Path
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.llm import get_llm
 from app.tone_loader import load_tone_samples
-
+from app.viral_memory import load_viral_memory
+from pathlib import Path
 
 def load_viral_title_patterns() -> str:
     path = Path("kb/title_patterns.txt")
@@ -125,6 +126,13 @@ def build_anti_repeat_rules() -> str:
 
 def generate_titles(post_text: str, topic: str, n: int = 10) -> str:
     llm = get_llm()
+    patterns_path = Path("kb/title_patterns_learned.txt")
+
+    learned_patterns = ""
+
+    if patterns_path.exists():
+        learned_patterns = patterns_path.read_text(encoding="utf-8")
+    viral_memory = load_viral_memory()
 
     tone_samples = load_tone_samples(max_samples=5)
 
@@ -139,6 +147,16 @@ def generate_titles(post_text: str, topic: str, n: int = 10) -> str:
 
 目标：
 根据正文内容生成更容易点击的小红书标题。
+以下是系统记录的一些高点击标题结构：
+
+{viral_memory}
+
+可以参考这些结构，但不要照抄。
+以下是系统从真实爆款学习到的标题结构：
+
+{learned_patterns}
+
+请参考这些结构生成标题。
 
 标题特点：
 
@@ -149,7 +167,6 @@ def generate_titles(post_text: str, topic: str, n: int = 10) -> str:
 
 不要：
 
-❌ 标题党
 ❌ 夸张承诺
 ❌ “100%准确”
 ❌ “包准”

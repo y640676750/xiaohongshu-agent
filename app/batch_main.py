@@ -1,5 +1,6 @@
 import argparse
 import random
+from app.viral_memory import save_viral_pattern
 
 from app.schema import Brief
 from agents.writer import write_post
@@ -10,7 +11,7 @@ from app.notifier import send_telegram, send_telegram_file
 from app.topic_styles import TOPIC_STYLES
 
 
-def pick_styles_for_topic(topic: str, count: int = 3) -> list[str]:
+def pick_styles_for_topic(topic: str, count: int = 3):
     styles = TOPIC_STYLES.get(topic, ["自然口语"])
     if len(styles) >= count:
         return random.sample(styles, count)
