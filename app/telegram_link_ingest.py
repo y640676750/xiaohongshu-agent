@@ -6,7 +6,6 @@ from datetime import datetime
 
 from app.extractor import extract_article
 
-BOT_TOKEN = None
 STATE_FILE = "kb/processed_updates.json"
 TONE_SAMPLE_DIR = "kb/tone_pool/samples"
 
@@ -35,6 +34,7 @@ def save_state(state):
 
 
 def extract_links(text):
+    # 保留你原来的提取格式，不改
     pattern = r"https?://[^\s]+"
     return re.findall(pattern, text)
 
@@ -48,6 +48,22 @@ def fetch_updates(token, offset):
     return r.json()
 
 
+def send_reply(token, chat_id, text, reply_to_message_id=None):
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "disable_web_page_preview": True,
+    }
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+
+    try:
+        requests.post(url, json=payload, timeout=20)
+    except Exception:
+        pass
+
+
 def save_tone_sample(data):
     folder = Path(TONE_SAMPLE_DIR)
     folder.mkdir(parents=True, exist_ok=True)
@@ -55,7 +71,7 @@ def save_tone_sample(data):
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     file = folder / f"sample_{ts}.md"
 
-    tags_text = " ".join(data["tags"]) if data.get("tags") else "无"
+    tags_text = "\n".join(data["tags"]) if data.get("tags") else "无"
 
     content = f"""标题：
 {data['title']}
@@ -71,19 +87,39 @@ def save_tone_sample(data):
 """
 
     file.write_text(content, encoding="utf-8")
-    print("已保存语感样本：", file)
+    return file
 
 
-def process_message(text):
+def process_message(token, chat_id, message_id, text):
     links = extract_links(text)
+
+    found_xhs = False
 
     for link in links:
         if "xhslink.com" in link or "xiaohongshu.com" in link:
+            found_xhs = True
             print("发现小红书链接:", link)
 
-            data = extract_article(link)
+            try:
+                data = extract_article(link, raw_text=text)
+                saved_file = save_tone_sample(data)
 
-            save_tone_sample(data)
+                reply_text = (
+                    f"✅ 已采集成功\n\n"
+                    f"标题：{data['title']}\n"
+                    f"标签数：{len(data['tags'])}\n"
+                    f"文件：{saved_file.name}"
+                )
+                send_reply(token, chat_id, reply_text, reply_to_message_id=message_id)
+                print("已保存语感样本：", saved_file)
+
+            except Exception as e:
+                error_text = f"⚠️ 采集失败：{str(e)[:200]}"
+                send_reply(token, chat_id, error_text, reply_to_message_id=message_id)
+                print("采集失败：", e)
+
+    if not found_xhs:
+        print("未发现小红书链接")
 
 
 def main():
@@ -97,8 +133,13 @@ def main():
         update_id = item["update_id"]
 
         if "message" in item:
-            text = item["message"].get("text", "")
-            process_message(text)
+            message = item["message"]
+            text = message.get("text", "")
+            chat_id = message.get("chat", {}).get("id")
+            message_id = message.get("message_id")
+
+            if text and chat_id:
+                process_message(token, chat_id, message_id, text)
 
         state["last_update_id"] = update_id
 
