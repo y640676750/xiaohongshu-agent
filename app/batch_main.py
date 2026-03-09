@@ -1,10 +1,24 @@
 import argparse
+import random
+
 from app.schema import Brief
 from agents.writer import write_post
 from agents.title_generator import generate_titles
 from agents.title_ranker import rank_titles
 from app.utils import save_output
 from app.notifier import send_telegram, send_telegram_file
+from app.topic_styles import TOPIC_STYLES
+
+
+def pick_styles_for_topic(topic: str, count: int = 3) -> list[str]:
+    styles = TOPIC_STYLES.get(topic, ["自然口语"])
+    if len(styles) >= count:
+        return random.sample(styles, count)
+    # 如果样式不够，就补齐
+    result = []
+    while len(result) < count:
+        result.extend(styles)
+    return result[:count]
 
 
 def build_briefs(topic: str):
@@ -73,31 +87,49 @@ def build_briefs(topic: str):
         ]
 
 
+def sanitize_name(text: str) -> str:
+    return (
+        text.replace("/", "_")
+        .replace("\\", "_")
+        .replace(" ", "_")
+        .replace("：", "_")
+        .replace(":", "_")
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--topic", required=True, choices=["八字", "MBTI", "恋爱测试"])
     args = parser.parse_args()
 
-    briefs = build_briefs(args.topic)
+    topic = args.topic
+    briefs = build_briefs(topic)
+    styles = pick_styles_for_topic(topic, count=3)
 
-    send_telegram(f"📌 本轮自动生成主题：{args.topic}（共3条）")
+    send_telegram(f"📌 本轮自动生成主题：{topic}（共3条）")
 
-    for idx, brief in enumerate(briefs, start=1):
-        post_text = write_post(brief, topic=args.topic)
-        titles_text = generate_titles(post_text, topic=args.topic, n=10)
+    for idx, (brief, style) in enumerate(zip(briefs, styles), start=1):
+        # 把文风拼到 topic 里传给 writer，方便 writer 里做风格控制
+        topic_with_style = f"{topic}|{style}"
+
+        post_text = write_post(brief, topic=topic_with_style)
+        titles_text = generate_titles(post_text, topic=topic, n=10)
         ranked = rank_titles(post_text, titles_text, top_k=3)
 
-        saved_post = save_output(post_text, prefix=f"{args.topic}_xhs_{idx}")
-        saved_titles = save_output(titles_text, prefix=f"{args.topic}_titles_generated_{idx}")
-        saved_ranked = save_output(ranked, prefix=f"{args.topic}_titles_ranked_{idx}")
+        safe_topic = sanitize_name(topic)
+        safe_style = sanitize_name(style)
 
-        send_telegram(f"✅【{args.topic} 第{idx}条 正文】\n\n" + post_text)
-        send_telegram(f"✅【{args.topic} 第{idx}条 候选标题】\n\n" + titles_text)
-        send_telegram(f"✅【{args.topic} 第{idx}条 标题Top3】\n\n" + ranked)
+        saved_post = save_output(post_text, prefix=f"{safe_topic}_{safe_style}_xhs_{idx}")
+        saved_titles = save_output(titles_text, prefix=f"{safe_topic}_{safe_style}_titles_generated_{idx}")
+        saved_ranked = save_output(ranked, prefix=f"{safe_topic}_{safe_style}_titles_ranked_{idx}")
 
-        send_telegram_file(saved_post, f"{args.topic} 第{idx}条 正文文件")
-        send_telegram_file(saved_titles, f"{args.topic} 第{idx}条 候选标题文件")
-        send_telegram_file(saved_ranked, f"{args.topic} 第{idx}条 标题评分文件")
+        send_telegram(f"✅【{topic}｜{style}｜第{idx}条 正文】\n\n" + post_text)
+        send_telegram(f"✅【{topic}｜{style}｜第{idx}条 候选标题】\n\n" + titles_text)
+        send_telegram(f"✅【{topic}｜{style}｜第{idx}条 标题Top3】\n\n" + ranked)
+
+        send_telegram_file(saved_post, f"{topic}｜{style}｜第{idx}条 正文文件")
+        send_telegram_file(saved_titles, f"{topic}｜{style}｜第{idx}条 候选标题文件")
+        send_telegram_file(saved_ranked, f"{topic}｜{style}｜第{idx}条 标题评分文件")
 
 
 if __name__ == "__main__":
