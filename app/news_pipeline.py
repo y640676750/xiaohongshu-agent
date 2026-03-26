@@ -20,6 +20,7 @@ from app.news_summarizer import (
     summarize_article,
     generate_daily_digest,
     pick_best_for_content,
+    _fallback_digest,
 )
 from app.notifier import send_telegram, send_telegram_file
 from app.utils import save_output
@@ -102,17 +103,28 @@ def run_news_pipeline(
     print(f"   Archived to: {archive_path}")
 
     # Step 2: Summarize
+    summarize_ok = False
     if summarize:
         print(f"\n🔍 Step 2: Summarizing top {min(len(articles), max_summarize)} articles...")
         to_summarize = articles[:max_summarize]
         for i, article in enumerate(to_summarize, 1):
             print(f"   [{i}/{len(to_summarize)}] {article['title'][:50]}...")
-            summarize_article(article)
+            try:
+                summarize_article(article)
+                summarize_ok = True
+            except Exception as e:
+                print(f"   ⚠️ Summarize failed: {e}")
+                article["summary"] = ""
+                article["summarized"] = False
 
     # Step 3: Generate digest
     if digest:
         print("\n📝 Step 3: Generating daily digest...")
-        digest_text = generate_daily_digest(articles)
+        try:
+            digest_text = generate_daily_digest(articles)
+        except Exception as e:
+            print(f"   ⚠️ LLM digest failed, using fallback: {e}")
+            digest_text = _fallback_digest(articles, datetime.now().strftime("%Y年%m月%d日"))
 
         saved_digest = save_output(digest_text, prefix="ai_daily_digest")
         print(f"   Saved digest: {saved_digest}")
