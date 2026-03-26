@@ -105,12 +105,7 @@ def main():
 
     if args.with_news:
         from app.news_pipeline import run_news_pipeline
-        run_news_pipeline(
-            summarize=True,
-            digest=True,
-            generate_content=True,
-            max_summarize=5,
-        )
+        run_news_pipeline(max_articles=5, max_posts=3)
         return
 
     topic = args.topic

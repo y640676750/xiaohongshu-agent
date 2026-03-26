@@ -163,3 +163,76 @@ def write_post(brief, topic: str) -> str:
         HumanMessage(content=user_prompt),
     ]
     return llm.invoke(msgs).content
+
+
+def write_post_from_article(article: dict) -> str:
+    """
+    基于真实抓取的文章内容，生成小红书引流文案。
+    article 需包含: title, url, source, snippet, page_content, oneliner, analysis
+    """
+    llm = get_llm()
+    system_prompt = load_text("prompts/writer_system.txt")
+    tone_samples = load_tone_samples(max_samples=3)
+    viral_structures = load_viral_structures()
+    anti_duplicate_rules = build_anti_duplicate_rules()
+
+    category = article.get("category_detected", "AI资讯")
+    topic_instruction = build_topic_instruction(category, "科技前沿")
+
+    page_content = article.get("page_content", "")
+    analysis = article.get("analysis", "")
+    oneliner = article.get("oneliner", article["title"])
+
+    user_prompt = f"""
+你现在要基于下面这篇真实的AI资讯/文章，写一篇小红书引流文案。
+
+📰 原文信息：
+标题：{article['title']}
+来源：{article['source']}
+一句话概括：{oneliner}
+
+原文内容（节选）：
+---
+{page_content[:2000] if page_content else article.get('snippet', '')}
+---
+
+AI分析：
+{analysis}
+
+{topic_instruction}
+
+参考语感样本：
+---
+{tone_samples}
+---
+
+参考爆款结构：
+---
+{viral_structures}
+---
+
+{anti_duplicate_rules}
+
+写作要求：
+- 基于上面的真实文章内容来写，不要编造信息
+- 用小红书的语感把这个资讯/技巧包装成适合传播的内容
+- 要有信息增量，让读者觉得"看了这篇就够了"
+- 保持"专业干货70% + 亲切分享30%"
+- 如果是资讯类：突出"发生了什么 + 跟你有什么关系 + 你该怎么做"
+- 如果是技巧类：突出"具体怎么操作 + 效果对比 + 马上就能用"
+- 如果是工具类：突出"解决什么问题 + 实际体验 + 适合谁用"
+- 避免夸大AI能力，保持客观
+- 不要输出解释，直接输出文案
+
+输出必须包含：
+1）标题5个
+2）正文1篇（400字左右）
+3）话题标签10个
+4）置顶评论引导1句
+"""
+
+    msgs = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt),
+    ]
+    return llm.invoke(msgs).content

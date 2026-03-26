@@ -7,14 +7,14 @@ on:
     - cron: "0 13 * * *"   # 北京时间 21:00 - 晚间汇总
   workflow_dispatch:
     inputs:
-      generate_content:
-        description: "Also generate XHS posts from top articles"
-        type: boolean
-        default: false
-      max_summarize:
-        description: "Max articles to summarize"
+      max_articles:
+        description: "最多分析多少篇文章"
         type: number
-        default: 10
+        default: 5
+      max_posts:
+        description: "最多生成多少条小红书文案"
+        type: number
+        default: 3
 
 jobs:
   fetch-news:
@@ -33,17 +33,14 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run news pipeline
+      - name: Run news-to-XHS pipeline
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          ARGS=""
-          if [ "${{ github.event.inputs.generate_content }}" = "true" ]; then
-            ARGS="$ARGS --generate-content"
-          fi
-          if [ -n "${{ github.event.inputs.max_summarize }}" ]; then
-            ARGS="$ARGS --max-summarize ${{ github.event.inputs.max_summarize }}"
-          fi
-          python -m app.news_pipeline $ARGS
+          MAX_ART="${{ github.event.inputs.max_articles }}"
+          MAX_POST="${{ github.event.inputs.max_posts }}"
+          python -m app.news_pipeline \
+            --max-articles "${MAX_ART:-5}" \
+            --max-posts "${MAX_POST:-3}"
