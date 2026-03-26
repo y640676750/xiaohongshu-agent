@@ -157,7 +157,6 @@ def is_likely_author_name(line: str) -> bool:
 
     # 带明显账号感关键词，且长度较短
     author_keywords = [
-        "心理测试",
         "测评",
         "日记",
         "日常",
@@ -168,6 +167,8 @@ def is_likely_author_name(line: str) -> bool:
         "酱",
         "酱呀",
         "老师",
+        "科技",
+        "数码",
     ]
     if any(k in line for k in author_keywords) and len(line) <= 12:
         return True

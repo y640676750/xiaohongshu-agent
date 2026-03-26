@@ -4,7 +4,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from app.llm import get_llm
 from app.tone_loader import load_tone_samples
 from app.viral_memory import load_viral_memory
-from pathlib import Path
+
 
 def load_viral_title_patterns() -> str:
     path = Path("kb/title_patterns.txt")
@@ -16,88 +16,87 @@ def load_viral_title_patterns() -> str:
 常见爆款标题结构：
 
 1
-我一直以为X，结果Y
+用了这个AI工具，效率直接翻倍
 
 2
-原来X真的会影响Y
+原来AI还能这样用，后悔没早知道
 
 3
-难怪我总是X
+这个AI技巧，帮我省了X小时
 
 4
-第一次知道X还能这样
+刚发布的AI工具，我先替你们试了
 
 5
-测完我沉默了
+别再手动做XX了，AI一键搞定
 
 6
-原来我不是X，是Y
+AI圈又炸了，这次是真的强
 
 7
-难怪我恋爱总是这样
+实测X款AI工具，最好用的是这个
 
 8
-原来生日真的能看出性格
+普通人用AI赚钱/提效的正确姿势
 
 9
-MBTI之外，我更震惊的是这个
+ChatGPT/Claude都不知道的隐藏技巧
 
 10
-一直解释不清的感觉，终于被说中了
+这个AI玩法，90%的人还不知道
 """
 
 
 def build_topic_instruction(topic: str) -> str:
 
-    if topic == "八字":
+    if topic == "AI资讯":
         return """
 主题重点：
-- 生日
-- 生辰八字
-- 五行
-- 命理
-- 性格
-- 婚恋
-- 事业
-- 财富
+- 最新AI动态
+- 大模型更新
+- 行业趋势
+- 技术突破
+- 产品发布
+- 政策变化
 
 标题风格：
-神秘感 + 好奇心 + 自我探索
+信息差 + 紧迫感 + 好奇心
 
 例如感觉：
-原来生日真的会影响性格
-难怪我总是这样想事情
+AI圈又出大事了
+这个更新太重要了，赶紧看
 """
-    elif topic == "MBTI":
+    elif topic == "AI使用技巧":
         return """
 主题重点：
-- MBTI
-- 人格类型
-- 社交模式
-- 情绪模式
-- 职场关系
+- Prompt技巧
+- 工作流搭建
+- 效率提升
+- 具体操作方法
+- 实用模板
 
 标题风格：
-轻测试感 + 社交吐槽 + 共鸣
+干货感 + 效率对比 + 获得感
 
 例如感觉：
-MBTI之外我更震惊的是这个
-难怪我总和别人聊不到一起
+学会这个技巧，效率翻10倍
+用了这个方法，再也不加班了
 """
-    elif topic == "恋爱测试":
+    elif topic == "AI工具推荐":
         return """
 主题重点：
-- 恋爱模式
-- 依恋类型
-- 情绪拉扯
-- 关系内耗
+- 工具对比
+- 使用场景
+- 核心功能
+- 适合人群
+- 免费/付费
 
 标题风格：
-闺蜜聊天 + 共鸣 + 情绪反差
+测评感 + 场景感 + 实用推荐
 
 例如感觉：
-难怪我恋爱总是这样
-原来我不是恋爱脑，是这个
+实测5款AI写作工具，最好用的是这个
+做PPT再也不求人了
 """
     else:
         return ""
@@ -108,17 +107,17 @@ def build_anti_repeat_rules() -> str:
 防重复要求：
 
 不要每次都用：
-我一直以为...
+别再...了
 原来...
-难怪...
+这个AI工具...
 
 要多变化表达：
 
 例如：
-- 我后来才发现
-- 一直解释不清的感觉
-- 后来我去测了一个东西
-- 突然有点理解自己了
+- 我后来发现一个更好的方法
+- 试了很多工具，最后留下的是这几个
+- 朋友推荐的，用了真香
+- 突然发现效率提升了好多
 
 不要让所有标题结构完全一样。
 """
@@ -143,7 +142,7 @@ def generate_titles(post_text: str, topic: str, n: int = 10) -> str:
     anti_repeat_rules = build_anti_repeat_rules()
 
     system_prompt = f"""
-你是一个非常懂小红书生态的标题创作者。
+你是一个非常懂小红书生态的AI科技内容标题创作者。
 
 目标：
 根据正文内容生成更容易点击的小红书标题。
@@ -160,16 +159,17 @@ def generate_titles(post_text: str, topic: str, n: int = 10) -> str:
 
 标题特点：
 
-- 有共鸣
+- 有信息增量
 - 有好奇心
-- 有代入感
+- 有实用感
 - 不像广告
 
 不要：
 
-❌ 夸张承诺
-❌ “100%准确”
-❌ “包准”
+❌ 夸大AI能力
+❌ "学了就能年薪百万"
+❌ "AI替代所有人"
+❌ 制造AI焦虑
 
 {topic_instruction}
 
