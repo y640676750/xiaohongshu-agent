@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Runtime data (generated per-run, should not be committed)
+kb/news_history.json
+kb/news_archive/
+outputs/

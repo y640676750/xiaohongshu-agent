@@ -1,0 +1,49 @@
+name: Auto Fetch AI News
+
+on:
+  schedule:
+    - cron: "0 1 * * *"    # 北京时间 09:00 - 早间资讯
+    - cron: "0 5 * * *"    # 北京时间 13:00 - 午间更新
+    - cron: "0 13 * * *"   # 北京时间 21:00 - 晚间汇总
+  workflow_dispatch:
+    inputs:
+      generate_content:
+        description: "Also generate XHS posts from top articles"
+        type: boolean
+        default: false
+      max_summarize:
+        description: "Max articles to summarize"
+        type: number
+        default: 10
+
+jobs:
+  fetch-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run news pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.generate_content }}" = "true" ]; then
+            ARGS="$ARGS --generate-content"
+          fi
+          if [ -n "${{ github.event.inputs.max_summarize }}" ]; then
+            ARGS="$ARGS --max-summarize ${{ github.event.inputs.max_summarize }}"
+          fi
+          python -m app.news_pipeline $ARGS

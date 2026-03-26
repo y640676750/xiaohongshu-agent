@@ -100,7 +100,18 @@ def sanitize_name(text: str) -> str:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--topic", required=True, choices=["AI资讯", "AI使用技巧", "AI工具推荐"])
+    parser.add_argument("--with-news", action="store_true", help="先抓取最新资讯，再基于真实新闻生成内容")
     args = parser.parse_args()
+
+    if args.with_news:
+        from app.news_pipeline import run_news_pipeline
+        run_news_pipeline(
+            summarize=True,
+            digest=True,
+            generate_content=True,
+            max_summarize=5,
+        )
+        return
 
     topic = args.topic
     briefs = build_briefs(topic)
