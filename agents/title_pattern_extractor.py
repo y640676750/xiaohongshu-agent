@@ -9,10 +9,13 @@ def normalize_title(title: str):
 
     patterns = [
         r"我.*?以为",
-        r"难怪我",
+        r"难怪",
         r"原来",
-        r"为什么我",
+        r"为什么",
         r"第一次",
+        r"别再.*?了",
+        r"实测",
+        r"用了.*?之后",
     ]
 
     for p in patterns:

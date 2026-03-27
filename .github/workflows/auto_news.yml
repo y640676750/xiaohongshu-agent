@@ -1,0 +1,46 @@
+name: Auto Fetch AI News
+
+on:
+  schedule:
+    - cron: "0 1 * * *"    # 北京时间 09:00 - 早间资讯
+    - cron: "0 5 * * *"    # 北京时间 13:00 - 午间更新
+    - cron: "0 13 * * *"   # 北京时间 21:00 - 晚间汇总
+  workflow_dispatch:
+    inputs:
+      max_articles:
+        description: "最多分析多少篇文章"
+        type: number
+        default: 5
+      max_posts:
+        description: "最多生成多少条小红书文案"
+        type: number
+        default: 3
+
+jobs:
+  fetch-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run news-to-XHS pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MAX_ART="${{ github.event.inputs.max_articles }}"
+          MAX_POST="${{ github.event.inputs.max_posts }}"
+          python -m app.news_pipeline \
+            --max-articles "${MAX_ART:-5}" \
+            --max-posts "${MAX_POST:-3}"

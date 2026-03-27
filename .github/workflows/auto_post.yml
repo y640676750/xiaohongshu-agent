@@ -23,18 +23,17 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install requests beautifulsoup4
 
       - name: Decide topic by current schedule
         id: pick
         run: |
           HOUR=$(date -u +%H)
           if [ "$HOUR" = "02" ]; then
-            echo "topic=八字" >> $GITHUB_OUTPUT
+            echo "topic=AI资讯" >> $GITHUB_OUTPUT
           elif [ "$HOUR" = "08" ]; then
-            echo "topic=MBTI" >> $GITHUB_OUTPUT
+            echo "topic=AI使用技巧" >> $GITHUB_OUTPUT
           else
-            echo "topic=恋爱测试" >> $GITHUB_OUTPUT
+            echo "topic=AI工具推荐" >> $GITHUB_OUTPUT
           fi
 
       - name: Run batch agent

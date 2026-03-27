@@ -15,7 +15,6 @@ def pick_styles_for_topic(topic: str, count: int = 3):
     styles = TOPIC_STYLES.get(topic, ["自然口语"])
     if len(styles) >= count:
         return random.sample(styles, count)
-    # 如果样式不够，就补齐
     result = []
     while len(result) < count:
         result.extend(styles)
@@ -23,67 +22,67 @@ def pick_styles_for_topic(topic: str, count: int = 3):
 
 
 def build_briefs(topic: str):
-    if topic == "八字":
+    if topic == "AI资讯":
         return [
             Brief(
                 link="{LINK}",
-                selling_point="输入生日即可生成生辰八字，AI解析性格、五行、婚恋、事业、财富",
-                audience="对命理、自我探索、恋爱和事业方向感兴趣的人",
-                keywords=["生日", "生辰八字", "五行", "婚恋", "事业", "财富"],
+                selling_point="第一时间带你了解AI行业最新动态，大模型更新、新产品发布、技术突破一网打尽",
+                audience="关注AI发展、想掌握行业趋势的职场人和科技爱好者",
+                keywords=["AI资讯", "大模型", "GPT", "Claude", "AI动态", "科技前沿"],
             ),
             Brief(
                 link="{LINK}",
-                selling_point="通过生日快速生成八字分析，帮你从命理角度看懂自己",
-                audience="喜欢测试、命理、性格分析的年轻女生",
-                keywords=["八字", "性格", "五行", "命理", "自我了解"],
+                selling_point="深度解读AI行业变化，帮你看懂技术趋势背后的机会",
+                audience="想了解AI对自己行业影响的职场人士",
+                keywords=["AI趋势", "行业变革", "技术解读", "人工智能", "未来趋势"],
             ),
             Brief(
                 link="{LINK}",
-                selling_point="AI八字解析，一分钟了解你的命理性格和感情趋势",
-                audience="想了解自己感情模式和事业方向的人",
-                keywords=["感情", "命理", "八字", "事业", "性格"],
+                selling_point="最新AI产品实测体验，帮你判断值不值得用",
+                audience="想尝试新AI产品但不知道从何下手的人",
+                keywords=["AI产品", "实测", "体验", "新品发布", "AI评测"],
             ),
         ]
-    elif topic == "MBTI":
+    elif topic == "AI使用技巧":
         return [
             Brief(
                 link="{LINK}",
-                selling_point="免费 MBTI 性格测试，快速看懂自己的人格类型",
-                audience="喜欢人格测试、社交分析、自我探索的人",
-                keywords=["MBTI", "人格类型", "性格测试", "自我探索"],
+                selling_point="分享实用AI技巧，让你的工作效率翻倍，学完就能用",
+                audience="想用AI提升工作效率的职场人士和学生",
+                keywords=["AI技巧", "Prompt", "效率提升", "ChatGPT技巧", "AI实操"],
             ),
             Brief(
                 link="{LINK}",
-                selling_point="AI 帮你解读 MBTI，看看你到底适合什么相处方式",
-                audience="想更了解自己社交风格和职场模式的人",
-                keywords=["MBTI", "社交", "职场", "性格"],
+                selling_point="AI创意玩法大揭秘，你想不到的AI骚操作都在这里",
+                audience="对AI感兴趣、喜欢探索新玩法的年轻人",
+                keywords=["AI玩法", "创意", "AI绘画", "AI视频", "AI音乐"],
             ),
             Brief(
                 link="{LINK}",
-                selling_point="用 MBTI 看懂自己的情绪和关系模式",
-                audience="想搞懂自己和别人相处方式的人",
-                keywords=["MBTI", "关系模式", "情绪", "人格"],
+                selling_point="职场人必备的AI工作流，从写方案到做PPT全搞定",
+                audience="每天被汇报、方案、PPT折磨的职场打工人",
+                keywords=["职场AI", "写方案", "做PPT", "数据分析", "AI办公"],
             ),
         ]
-    else:  # 恋爱测试
+    else:  # AI工具推荐
         return [
             Brief(
                 link="{LINK}",
-                selling_point="免费恋爱测试，看看你在感情里到底是什么类型",
-                audience="恋爱容易内耗、敏感、想了解自己关系模式的人",
-                keywords=["恋爱测试", "依恋类型", "内耗", "关系模式"],
+                selling_point="精选最好用的AI工具，零基础也能轻松上手",
+                audience="AI小白、想入门但不知道用什么工具的人",
+                keywords=["AI工具", "新手入门", "小白友好", "免费AI", "AI推荐"],
             ),
             Brief(
                 link="{LINK}",
-                selling_point="测测你的恋爱脑指数和依恋风格",
-                audience="总在感情里反复纠结的人",
-                keywords=["恋爱脑", "依恋", "焦虑型", "回避型"],
+                selling_point="多款AI工具实测对比，帮你选出最适合的那个",
+                audience="用过一些AI工具但想找到更好替代品的人",
+                keywords=["AI对比", "工具测评", "ChatGPT", "Claude", "Gemini"],
             ),
             Brief(
                 link="{LINK}",
-                selling_point="看看你为什么总在恋爱里患得患失",
-                audience="想更了解自己感情模式的女生",
-                keywords=["恋爱", "患得患失", "关系", "测试"],
+                selling_point="不同场景下的最佳AI工具推荐，对号入座直接用",
+                audience="有具体需求场景、想找到最佳AI解决方案的人",
+                keywords=["AI写作", "AI绘画", "AI编程", "AI翻译", "场景推荐"],
             ),
         ]
 
@@ -100,8 +99,14 @@ def sanitize_name(text: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--topic", required=True, choices=["八字", "MBTI", "恋爱测试"])
+    parser.add_argument("--topic", required=True, choices=["AI资讯", "AI使用技巧", "AI工具推荐"])
+    parser.add_argument("--with-news", action="store_true", help="先抓取最新资讯，再基于真实新闻生成内容")
     args = parser.parse_args()
+
+    if args.with_news:
+        from app.news_pipeline import run_news_pipeline
+        run_news_pipeline(max_articles=5, max_posts=3)
+        return
 
     topic = args.topic
     briefs = build_briefs(topic)
@@ -110,7 +115,6 @@ def main():
     send_telegram(f"📌 本轮自动生成主题：{topic}（共3条）")
 
     for idx, (brief, style) in enumerate(zip(briefs, styles), start=1):
-        # 把文风拼到 topic 里传给 writer，方便 writer 里做风格控制
         topic_with_style = f"{topic}|{style}"
 
         post_text = write_post(brief, topic=topic_with_style)

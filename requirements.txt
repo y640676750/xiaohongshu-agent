@@ -1,4 +1,6 @@
 annotated-types==0.7.0
+beautifulsoup4==4.14.3
+feedparser==6.0.12
 anyio==4.12.1
 certifi==2026.2.25
 charset-normalizer==3.4.5
