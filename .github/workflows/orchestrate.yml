@@ -1,0 +1,73 @@
+name: Multi-Agent Orchestrator
+
+on:
+  schedule:
+    - cron: "30 1 * * *"   # 北京时间 09:30
+    - cron: "30 9 * * *"   # 北京时间 17:30
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "强制使用的主题（留空让分析师自动决定）"
+        type: choice
+        options: [auto, "AI资讯", "AI使用技巧", "AI工具推荐"]
+        default: auto
+      style:
+        description: "文风"
+        type: string
+        default: "科技前沿"
+      auto_publish:
+        description: "生成完直接调用 publisher（mock 后端只写文件）"
+        type: boolean
+        default: false
+      schedule_minutes:
+        description: "或者把草稿安排到 N 分钟后发布"
+        type: number
+        default: 0
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Run orchestrator
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          XHS_DB_PATH: kb/xhs_agent.db
+        run: |
+          TOPIC="${{ github.event.inputs.topic }}"
+          STYLE="${{ github.event.inputs.style }}"
+          AUTO="${{ github.event.inputs.auto_publish }}"
+          SCHED="${{ github.event.inputs.schedule_minutes }}"
+
+          ARGS="--style ${STYLE:-科技前沿}"
+          if [ "$TOPIC" != "auto" ] && [ -n "$TOPIC" ]; then
+            ARGS="$ARGS --topic $TOPIC"
+          fi
+          if [ "$AUTO" = "true" ]; then
+            ARGS="$ARGS --auto-publish"
+          fi
+          if [ -n "$SCHED" ] && [ "$SCHED" != "0" ]; then
+            ARGS="$ARGS --schedule-minutes $SCHED"
+          fi
+
+          python -m agents.orchestrator $ARGS
+
+      - name: Upload draft outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orchestrator-outputs
+          path: |
+            outputs/
+            kb/xhs_agent.db
+          if-no-files-found: ignore
